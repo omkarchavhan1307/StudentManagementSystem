@@ -1,51 +1,78 @@
 from fastapi import APIRouter
-from Controller.studentcontroller import CreateStudent 
 from Model.studentmodel import StudentStruct
 from Model.studentupdate import updateStruct
-from Database.dbconnection import collection
+from Database.dbconnection import collectionName
 
 router = APIRouter()
 
-@router.post("/createStudent")
-def create(student:StudentStruct):
-    return CreateStudent(student)
 
-@router.get("/allstudents")
-def GetStudent():
-    alldata = list(collection.find({},{"_id":0}))
-    return alldata
+@router.post("/student")
+def CreateStudent(student: StudentStruct):
+    try:
+        sinfo = {
+            "roll": student.roll,
+            "name": student.name,
+            "age": student.age,
+            "email": student.email
+        }
+
+        collectionName.insert_one(sinfo)
+
+        return {"message": "new student created"}
+
+    except Exception as e:
+        print("ERROR:", e)
+        return {"message": "Something wrong", "error": str(e)}
+
+
+
+@router.get("/studentslist")
+def Getallstudents():
+    try:
+        alldata = list(collectionName.find({}, {"_id": 0}))
+        return alldata
+
+    except:
+        return "something wrong"
 
 
 @router.put("/edit/{roll}")
-def UpdateStudent(roll:int,student:updateStruct):
-    alldata = list(collection.find({},{"_id":0}))
+def UpdateStudent(roll:int,studentinfo:updateStruct):
+    try:
+        alldata = list(collectionName.find({},{"_id":0}))
+        updatedinfo = {}
 
-    updatedstudent = {}
 
-    for i in alldata:
-        if i["roll"]==roll:
+        for i in alldata:
+            if i["roll"]==roll:
 
-            if student.name != None:
-                updatedstudent["name"]=student.name
+                if studentinfo.name != None:
+                    updatedinfo["name"]=studentinfo.name
 
-            if student.age != None:
-                updatedstudent["age"] = student.age
+                if studentinfo.age != None:
+                    updatedinfo["age"]=studentinfo.age
 
-        collection.update_one(
-            {"roll":roll},
-            {"$set":updatedstudent}
-        )
+                if studentinfo.email != None:
+                    updatedinfo["email"]=studentinfo.email
 
-        return {"message":"student Updated"}
+                collectionName.update_one(
+                    {"roll":roll},
+                    {"$set":updatedinfo}
+                )
 
+                return {"message":"user updated"}    
+    except:
+        return{"message":"something wrong"}
 
 
 @router.delete("/delet/{roll}")
 def Deletstudent(roll:int):
-    alldata = list(collection.find({},{"_id":0}))
 
-    for i in alldata:
-        if i["roll"]==roll:
-            collection.delete_one({"roll":roll})
-            return {"message":"student deleted"}
-    
+    try:
+        alldata = list(collectionName.find({},{"_id":0}))
+        for i in alldata:
+            if i["roll"]==roll:
+                collectionName.delete_one({"roll":roll})
+                return{"message":"student deleted"}
+    except:
+        return {"message":"something wrong"}

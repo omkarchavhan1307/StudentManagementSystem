@@ -1,17 +1,14 @@
-import os
 from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure
+import os
+from dotenv import load_dotenv
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+load_dotenv()
 
-try:
-    connectionString = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-    connectionString.admin.command("ping")  # fail fast if DB unreachable
-except ConnectionFailure as e:
-    raise RuntimeError(f"Could not connect to MongoDB: {e}")
+url = os.getenv("MongoDbUrl")
 
-DatabaseName = connectionString["SMS1"]
-CollectionName = DatabaseName["AllStudents"]
+connectionstring = MongoClient(url)
+# connectionstring = MongoClient("mongodb+srv://harshghorpade4150_db_user:Ki7xyv8qmiU6rEiP@cluster0.kdm1efq.mongodb.net/?appName=Cluster0")
 
-# Ensure roll numbers are unique at the DB level
-CollectionName.create_index("roll", unique=True)
+DatabaseName = connectionstring["StudentDb"]
+
+collectionName = DatabaseName["studentList"]
